@@ -1,0 +1,63 @@
+name: Test Discord webhook
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webhook-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check webhook secret is configured
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL secret is missing. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          echo "Webhook secret is configured."
+
+      - name: Send a test message to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+
+          url = os.environ["DISCORD_WEBHOOK_URL"].strip()
+          if not (url.startswith("https://discord.com/api/webhooks/") or
+                  url.startswith("https://discordapp.com/api/webhooks/")):
+              raise SystemExit("Secret is not a recognized Discord webhook URL.")
+
+          payload = json.dumps({
+              "content": "✅ Hollow Jack Monitor test — Discord notifications are connected. This is only a delivery test; grave detection is not active yet."
+          }).encode("utf-8")
+          request = urllib.request.Request(
+              url,
+              data=payload,
+              headers={"Content-Type": "application/json", "User-Agent": "HollowJackMonitor/0.1"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=15) as response:
+                  if response.status in (200, 204):
+                      print("SUCCESS: Discord accepted the test message.")
+                  else:
+                      raise SystemExit(f"Discord returned unexpected HTTP status {response.status}.")
+          except urllib.error.HTTPError as exc:
+              print(f"FAILED: Discord returned HTTP {exc.code}. Check the webhook URL and channel permissions; the URL is not printed.")
+              raise SystemExit(1)
+          except Exception:
+              print("FAILED: Could not deliver the test message. Check the webhook URL and try again; the URL is not printed.")
+              raise SystemExit(1)
+          PY
