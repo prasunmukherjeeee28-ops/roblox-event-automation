@@ -1,0 +1,28 @@
+name: Test public server discovery
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax
+        run: python -m py_compile server_discovery.py webhook_test.py
+
+      - name: Query public Slap Battles servers
+        env:
+          ROBLOX_PLACE_ID: "6403373529"
+        run: python server_discovery.py
