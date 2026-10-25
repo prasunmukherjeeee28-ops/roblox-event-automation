@@ -1,0 +1,5 @@
+{
+  "roblox_place_id": "PUT_NUMERIC_PLACE_ID_HERE",
+  "server_pages_limit": 3,
+  "note": "Example only. This config does not detect in-game spawns. Keep Discord webhook URLs in environment variables, never in this file."
+}
