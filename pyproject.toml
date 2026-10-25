@@ -1,0 +1,9 @@
+[project]
+name = "hollow-jack-monitor"
+version = "0.1.0"
+description = "Public Roblox server discovery and Discord webhook test scaffold"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
